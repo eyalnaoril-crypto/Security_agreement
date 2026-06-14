@@ -23,6 +23,21 @@ OUT_DIR   = BASE_DIR / "outputs"
 SCRIPTS   = BASE_DIR / "scripts"
 OUT_DIR.mkdir(exist_ok=True)
 
+# Load .env from project root so subprocess invocations inherit secrets
+def _load_dotenv(path: Path):
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, _, v = line.partition("=")
+        k = k.strip()
+        v = v.strip().strip('"').strip("'")
+        if k and k not in os.environ:
+            os.environ[k] = v
+_load_dotenv(BASE_DIR / ".env")
+
 # ─────────────────────────────────────────────
 # 1. חילוץ טקסט מהקובץ
 # ─────────────────────────────────────────────

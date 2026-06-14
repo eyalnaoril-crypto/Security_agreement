@@ -22,12 +22,43 @@ from pathlib import Path
 from datetime import datetime
 
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import ttk, filedialog, messagebox, simpledialog
 
 BASE_DIR    = Path(__file__).resolve().parent
 SCRIPTS_DIR = BASE_DIR / "scripts"
 OUTPUTS_DIR = BASE_DIR / "outputs"
+ENV_FILE    = BASE_DIR / ".env"
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def load_dotenv():
+    """Load KEY=VALUE pairs from .env into os.environ (without overwriting existing)."""
+    if not ENV_FILE.exists():
+        return
+    for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, _, v = line.partition("=")
+        k = k.strip()
+        v = v.strip().strip('"').strip("'")
+        if k and k not in os.environ:
+            os.environ[k] = v
+
+
+def save_api_key(key: str):
+    """Persist ANTHROPIC_API_KEY to .env (preserves other variables)."""
+    lines = []
+    if ENV_FILE.exists():
+        for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
+            if not line.startswith("ANTHROPIC_API_KEY"):
+                lines.append(line)
+    lines.append(f'ANTHROPIC_API_KEY={key}')
+    ENV_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    os.environ["ANTHROPIC_API_KEY"] = key
+
+
+load_dotenv()
 
 # ─── G1 brand palette ─────────────────────────────────────────────
 COLORS = {
@@ -164,6 +195,17 @@ class G1App(tk.Tk):
         tk.Label(title_box, text="ניתוח הסכמי שמירה ואבטחה",
                  bg=COLORS["bg"], fg=COLORS["ink_soft"],
                  font=("Heebo", 9)).pack(anchor="e")
+
+        # Settings button on the left side of the header
+        btn_settings = tk.Button(
+            header, text="⚙  הגדרות",
+            command=self.on_settings,
+            bg=COLORS["bg"], fg=COLORS["dark"],
+            activebackground=COLORS["light"], activeforeground=COLORS["dark"],
+            relief="flat", borderwidth=0,
+            font=("Heebo", 10), cursor="hand2", padx=10, pady=6,
+        )
+        btn_settings.pack(side="left")
 
         # Card container
         body = tk.Frame(self, bg=COLORS["bg"])
@@ -345,9 +387,42 @@ class G1App(tk.Tk):
         self.btn_run.config(state="disabled")
         self._reset_progress()
 
+    def on_settings(self):
+        current = os.environ.get("ANTHROPIC_API_KEY", "")
+        masked = ("•" * 8 + current[-4:]) if current and len(current) > 8 else current
+        prompt = (
+            "הזן את ה-Anthropic API Key:\n"
+            f"(נוכחי: {masked or 'לא הוגדר'})\n\n"
+            "המפתח יישמר בקובץ .env מקומי בתיקיית הפרויקט."
+        )
+        key = simpledialog.askstring(
+            "הגדרות API", prompt, parent=self, show="*",
+        )
+        if key is None:
+            return
+        key = key.strip()
+        if not key:
+            messagebox.showinfo("הגדרות", "לא בוצע שינוי.")
+            return
+        try:
+            save_api_key(key)
+            messagebox.showinfo("הגדרות", "המפתח נשמר בהצלחה ב-.env.")
+        except Exception as e:
+            messagebox.showerror("שגיאה", f"כשל בשמירה: {e}")
+
     def on_run(self):
         if self.is_running or not self.selected_file:
             return
+        # Pre-flight: API key must exist
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            ans = messagebox.askyesno(
+                "API Key חסר",
+                "לא הוגדר ANTHROPIC_API_KEY.\n\nהאם להזין אותו עכשיו?",
+            )
+            if ans:
+                self.on_settings()
+            if not os.environ.get("ANTHROPIC_API_KEY"):
+                return
         self.is_running = True
         self.outputs = {}
         self._set_buttons_during_run(True)
