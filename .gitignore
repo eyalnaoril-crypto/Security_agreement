@@ -1,4 +1,6 @@
 outputs/
+obsidian-*.zip
+.obsidian/workspace*.json
 __pycache__/
 *.pyc
 .venv/
