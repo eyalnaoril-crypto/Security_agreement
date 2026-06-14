@@ -25,6 +25,13 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 
+# Force UTF-8 on stdout/stderr so Hebrew + Unicode arrows print on Windows cp1255 consoles
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 from flask import Flask, request, jsonify, send_file, Response, render_template, abort
 
 BASE_DIR   = Path(__file__).resolve().parent.parent
@@ -298,6 +305,6 @@ def status(job_id):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    print(f"\n  G1 Security Contract Agent – Web UI")
-    print(f"  → http://127.0.0.1:{port}\n")
+    print(f"\n  G1 Security Contract Agent - Web UI")
+    print(f"  -> http://127.0.0.1:{port}\n")
     app.run(host="127.0.0.1", port=port, debug=False, threaded=True)
