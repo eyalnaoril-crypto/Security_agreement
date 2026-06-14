@@ -47,6 +47,13 @@ findings.json
 - [[merge_runs.py]] – מיזוג runs צמודים ב-DOCX
 - [[simplify_redlines.py]] – פישוט tracked changes
 
+### 🌐 Web UI (ממשק דפדפן)
+- [[web/app.py]] – שרת Flask + SSE
+- [[web/templates/index.html]] – דף הבית
+- [[web/static/style.css]] – עיצוב G1 RTL
+- [[web/static/app.js]] – לוגיקת frontend
+- הפעלה: `python web/app.py` או `run_web.bat`
+
 ### 📦 Shared (תשתית פרויקט)
 - [[CLAUDE.md]] – הנחיות הסוכן לפרויקט הזה
 - [[requirements.txt]] – תלויות Python
