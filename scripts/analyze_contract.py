@@ -17,7 +17,7 @@ import sys, os, json, subprocess, tempfile, re
 from pathlib import Path
 from datetime import datetime
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).resolve().parent.parent  # project root (script lives in scripts/)
 DATA_DIR  = BASE_DIR / "data"
 OUT_DIR   = BASE_DIR / "outputs"
 SCRIPTS   = BASE_DIR / "scripts"
@@ -130,11 +130,11 @@ def export_excel(findings_data: dict, output_path: Path, contract_name: str):
     print("[3/4] מייצא Excel...")
 
     result = subprocess.run(
-        ["python3", str(SCRIPTS / "export_excel.py"),
+        [sys.executable, str(SCRIPTS / "export_excel.py"),
          json.dumps(findings_data),
          str(output_path),
          contract_name],
-        capture_output=True, text=True
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     if result.returncode != 0:
         print(f"[!] שגיאת Excel: {result.stderr}")
@@ -155,9 +155,9 @@ def export_word_tracked(contract_path: Path, findings_data: dict, output_path: P
         tmp_path = tmp.name
 
     result = subprocess.run(
-        ["python3", str(SCRIPTS / "inject_tracked.py"),
+        [sys.executable, str(SCRIPTS / "inject_tracked.py"),
          str(contract_path), tmp_path, str(output_path)],
-        capture_output=True, text=True
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     os.unlink(tmp_path)
 
