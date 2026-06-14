@@ -283,10 +283,11 @@ class G1App(tk.Tk):
                  font=("Heebo", 8)).pack(side="bottom", pady=(0, 10))
 
     def _card(self, parent):
-        outer = tk.Frame(parent, bg=COLORS["line"])
-        inner = tk.Frame(outer, bg=COLORS["white"])
-        inner.pack(fill="both", expand=True, padx=1, pady=1)
-        return inner
+        return tk.Frame(
+            parent, bg=COLORS["white"],
+            highlightbackground=COLORS["line"],
+            highlightthickness=1, bd=0,
+        )
 
     def _step_header(self, parent, num, title, with_status=False, color_override=None):
         hdr = tk.Frame(parent, bg=COLORS["white"])
